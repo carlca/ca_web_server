@@ -1,0 +1,10 @@
+{
+    "editor.tabSize": 3,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "[mojo]": {
+        "editor.tabSize": 3,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false
+    }
+}
