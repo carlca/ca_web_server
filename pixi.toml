@@ -9,9 +9,7 @@ version = "0.1.0"
 [tasks]
 serve = "python3 server.py"
 clean = "rm -rf .pixi/envs/default/share/max/crashdb 2>/dev/null; rm -f static/index.html static/style.css"
-generate = "pixi run clean && pixi run mojo fluent.mojo"
 fluent = "pixi run clean && pixi run mojo fluent.mojo"
-mini = "pixi run clean && pixi run mojo minimal_test.mojo"
 
 [dependencies]
 # mojo = "==0.25.6"
