@@ -1,6 +1,4 @@
-# HTML and CSS Generator (Fluent API)
-# Simple module for generating HTML and CSS without HTTP server dependencies
-
+# HTML and CSS Generator (Fluent API) - Fixed Version
 from html import Html
 from style import Style, FontUnit
 from colors import Colors
@@ -8,7 +6,6 @@ from googlefonts import GoogleFonts
 from postresponse import PostResponse
 from script import Script
 
-# Data structures
 @fieldwise_init
 struct Class(Copyable, Movable):
    var round_image: String
@@ -33,39 +30,20 @@ struct PostData(Copyable, Movable):
    var username: String
    var password: String
 
-# Page struct with fluent API
 @fieldwise_init
 struct Page(Copyable, Movable):
-
-   # Helper function to read file contents
-   fn get_file_contents(self, path: String) raises -> String:
-      var file_name = path.split("/")[-1]
-      with open("static/" + file_name, "r") as f:
-         var result = String()
-         for byte in f.read_bytes():
-            result += String(byte)
-         return result
-
-   # Generate CSS for a given path
-   fn get_css(self, path: String) raises -> String:
-      return self.get_file_contents(path)
-
-   # Generate image bytes for a given path
-   fn get_image(self, path: String) raises -> String:
-      return self.get_file_contents(path)
-
-   # Generate complete HTML page
-   fn get_page_html(self, use_static_css: Bool = False, use_static_html: Bool = False, username: String = "", password: String = "") raises -> String:
-      var page = Html()
-      var style = Style()
-      var css_class = Class(
+   var css_class: Class
+   var element_id: id
+   
+   fn __init__(out self):
+      self.css_class = Class(
          round_image="round_image",
          fancy_input="fancy_input",
          red_text="red_text",
          big_button="big_button",
          small_text="small_text"
       )
-      var element_id = id(
+      self.element_id = id(
          username="username",
          password="password",
          username_post="username_post",
@@ -76,25 +54,24 @@ struct Page(Copyable, Movable):
          update_dom="updateDom"
       )
 
-      # Image styling
+   # Split into smaller methods to avoid Mojo nightly method size limit
+   fn setup_image_and_input_styles(self, mut style: Style) raises:
       _ = style.
-         image_style(css_class.round_image).
+         image_style(self.css_class.round_image).
          width(150).height(150).
          border(20, "solid", Colors.darkblue).border_radius(75)
 
-      # Input styling
       _ = style.
-         input_style(css_class.fancy_input).
+         input_style(self.css_class.fancy_input).
          padding(10).margin(5).
          border(2, "dotted", Colors.blue).border_radius(5)
 
-      # Paragraph styling
+   fn setup_text_styles(self, mut style: Style) raises:
       _ = style.p().
          font_family("arial").color(Colors.blueviolet).background_color(Colors.yellow)
 
       _ = style.set_h_scale_factor(2)
 
-      # Header styling
       _ = style.h1().
          font_family(GoogleFonts.Audiowide).color(Colors.red).background_color(Colors.lightblue)
 
@@ -113,28 +90,63 @@ struct Page(Copyable, Movable):
       _ = style.h6().
          font_family(GoogleFonts.Salsa).color(Colors.black).background_color(Colors.lightcoral)
 
-      # Body styling
+   fn setup_body_and_id_styles(self, mut style: Style) raises:
       _ = style.body().
          color(Colors.darkblue).background_color(Colors.azure).
          font_size(16, FontUnit.PX).font_family("Arial, sans-serif")
 
-      # ID-specific styling
-      _ = style.id(element_id.lorem).
+      _ = style.id(self.element_id.lorem).
          font_family("Times New Roman, serif").font_size(110, FontUnit.PERCENT).
          color(Colors.chartreuse).background_color(Colors.darkblue).
          margin_top(0).margin_bottom(0).padding_top(10).padding_bottom(2).padding_left(10).padding_right(10)
 
-      _ = style.id(element_id.post_modern).
+      _ = style.id(self.element_id.post_modern).
          font_family("Futura, sans-serif").
          color(Colors.gainsboro).background_color(Colors.darkblue).
          margin(0).padding_top(2).padding_bottom(10).padding_left(10).padding_right(10)
 
-      _ = style.id(element_id.datetime).
+      _ = style.id(self.element_id.datetime).
          color(Colors.darkblue).background_color(Colors.lightblue).
          margin(0).padding(0).
          font_size(20, FontUnit.PX)
 
-      # Generate HTML head
+   fn add_content(self, mut page: Html, mut style: Style, username: String, password: String) raises:
+      _ = page.para("", self.element_id.datetime)
+      _ = page.script(Script(self.element_id.datetime).update_time())
+
+      _ = page.
+         h1(GoogleFonts.Audiowide).h2(GoogleFonts.Sofia).h3(GoogleFonts.Trirong).h4(GoogleFonts.Aclonica).h5(GoogleFonts.Bilbo).h6(GoogleFonts.Salsa)
+
+      _ = page.image("/earlyspring.png", self.css_class.round_image)
+      _ = page.para(page.lorem(), self.element_id.lorem)
+      _ = page.para(page.post_modern(), self.element_id.post_modern)
+
+      _ = page.form()
+      _ = page.input_text(self.element_id.username, username, self.css_class.fancy_input, 23, 23, False)
+      _ = page.input_text(self.element_id.password, password, self.css_class.fancy_input, 23, 23, True)
+      _ = page.submit()
+      _ = page.end_form()
+
+      var post_data = PostData(username, password)
+      _ = page.para("Username (POST): " + post_data.username, self.element_id.username_post)
+      _ = page.para("Password (POST): " + post_data.password, self.element_id.password_post)
+
+      _ = page.para("Username (DOM): ", self.element_id.username)
+      _ = page.para("Password (DOM): ", self.element_id.password)
+
+      _ = page.button("Update Outputs", self.element_id.update_dom)
+      _ = page.script(Script(self.element_id.update_dom).update_dom(
+         (self.element_id.username, post_data.username, True),
+         (self.element_id.password, post_data.password, True)))
+
+   fn get_page_html(self, use_static_css: Bool = False, use_static_html: Bool = False, username: String = "", password: String = "") raises -> String:
+      var page = Html()
+      var style = Style()
+      
+      self.setup_image_and_input_styles(style)
+      self.setup_text_styles(style)
+      self.setup_body_and_id_styles(style)
+
       if use_static_css:
          _ = style.save_to_file("static/style.css")
          _ = style.clear()
@@ -142,35 +154,8 @@ struct Page(Copyable, Movable):
       else:
          _ = page.html_head("ca_web HTML/CSS generator", "", style)
 
-      # Add content
-      _ = page.para("", element_id.datetime)
-      _ = page.script(Script(element_id.datetime).update_time())
-
-      _ = page.
-         h1(GoogleFonts.Audiowide).h2(GoogleFonts.Sofia).h3(GoogleFonts.Trirong).h4(GoogleFonts.Aclonica).h5(GoogleFonts.Bilbo).h6(GoogleFonts.Salsa)
-
-      _ = page.image("/earlyspring.png", css_class.round_image)
-      _ = page.para(page.lorem(), element_id.lorem)
-      _ = page.para(page.post_modern(), element_id.post_modern)
-
-      _ = page.form()
-      _ = page.input_text(element_id.username, username, css_class.fancy_input, 23, 23, False)
-      _ = page.input_text(element_id.password, password, css_class.fancy_input, 23, 23, True)
-      _ = page.submit()
-      _ = page.end_form()
-
-      var post_data = PostData(username, password)
-      _ = page.para("Username (POST): " + post_data.username, element_id.username_post)
-      _ = page.para("Password (POST): " + post_data.password, element_id.password_post)
-
-      _ = page.para("Username (DOM): ", element_id.username)
-      _ = page.para("Password (DOM): ", element_id.password)
-
-      _ = page.button("Update Outputs", element_id.update_dom)
-      _ = page.script(Script(element_id.update_dom).update_dom(
-         (element_id.username, post_data.username, True),
-         (element_id.password, post_data.password, True)))
-
+      self.add_content(page, style, username, password)
+      
       _ = page.end_html()
       page.prettify()
 
@@ -179,7 +164,6 @@ struct Page(Copyable, Movable):
 
       return String(page)
 
-# Simple main function for testing
 fn main() raises:
    print("Creating Page instance...")
    var page = Page()
