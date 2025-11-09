@@ -1,7 +1,7 @@
 [workspace]
 authors = ["Carl Caulkett <carl.caulkett@gmail.com>"]
-# channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
-channels = ["conda-forge", "https://conda.modular.com/max"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+# channels = ["conda-forge", "https://conda.modular.com/max"]
 name = "ca_web_server"
 platforms = ["osx-arm64"]
 version = "0.1.0"
@@ -11,6 +11,8 @@ serve = "python3 server.py"
 clean = "rm -rf .pixi/envs/default/share/max/crashdb 2>/dev/null; rm -f static/index.html static/style.css"
 generate = "pixi run clean && pixi run mojo fluent.mojo"
 fluent = "pixi run clean && pixi run mojo fluent.mojo"
+mini = "pixi run clean && pixi run mojo minimal_test.mojo"
 
 [dependencies]
-mojo = "==0.25.6"
+# mojo = "==0.25.6"
+mojo = "==0.25.6.0.dev2025091505"
